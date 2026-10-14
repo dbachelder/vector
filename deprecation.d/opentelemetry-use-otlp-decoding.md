@@ -11,8 +11,8 @@ this option or requiring users to migrate through an intermediate object form.
 
 **The replacement is not implemented in the OpenTelemetry source yet. Keep your existing
 `use_otlp_decoding` configuration until a supported migration is released.** Existing values continue
-to work. Users will have **at least two minor release cycles after the replacement is available and
-the deprecation is announced** to migrate before removal. No removal release has been scheduled.
+to work. Removal is not yet scheduled. Once the replacement is available and the deprecation is
+announced, we will give users at least one month to migrate before removing this option.
 
 #### Planned migration
 
