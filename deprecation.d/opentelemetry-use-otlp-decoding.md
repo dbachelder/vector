@@ -1,51 +1,49 @@
 ---
-what: "Boolean shorthand for OpenTelemetry `use_otlp_decoding`"
+what: "OpenTelemetry `use_otlp_decoding` configuration option"
 deprecated_since: "0.60.0"
 ---
 
 ### OpenTelemetry: `use_otlp_decoding`
 
-The boolean form of `use_otlp_decoding` is deprecated, but existing boolean values continue to work.
-**Users will have at least two minor release cycles to migrate before this shorthand is removed.
-No removal release has been scheduled.**
+We plan to replace the entire `use_otlp_decoding` option, including its boolean and per-signal object
+forms, with the standard `decoding` configuration. This avoids introducing another representation for
+this option or requiring users to migrate through an intermediate object form.
 
-This option controls which signals preserve their OTLP representation instead of being converted to
-Vector's native representation. Its boolean shorthand sets **all three signal options**.
+**The replacement is not implemented in the OpenTelemetry source yet. Keep your existing
+`use_otlp_decoding` configuration until a supported migration is released.** Existing values continue
+to work. Users will have **at least two minor release cycles after the replacement is available and
+the deprecation is announced** to migrate before removal. No removal release has been scheduled.
 
-#### Planned array form
+#### Planned migration
 
-The planned interface is an array of signal names. **Array support is not implemented yet; do not use
-these array values until support is released.** The intended migration is:
-
-| Existing configuration | Planned array form |
-| --- | --- |
-| `use_otlp_decoding: false` | `use_otlp_decoding: []` |
-| `use_otlp_decoding: true` | `use_otlp_decoding: ["logs", "metrics", "traces"]` |
-| `use_otlp_decoding: {logs: true, metrics: false, traces: true}` | `use_otlp_decoding: ["logs", "traces"]` |
-| Option omitted | Leave it omitted; all signals continue to use native conversion |
-
-An explicit array enables OTLP decoding only for the listed signals. An empty array and an omitted
-option both mean no signals use OTLP decoding, preserving the current default. Array order has no
-meaning, and unknown signal names will be rejected.
-
-This setting is separate from the OTLP codec's `decoding.signal_types` array, which controls the
-signal formats the codec tries to parse and their priority.
-
-#### Migration available today
-
-Until array support is released, use the supported per-signal object form. Replace:
+For configurations that preserve the OTLP representation of all signals, replace:
 
 ```yaml
 use_otlp_decoding: true
 ```
 
-with:
+with the following configuration **once the OpenTelemetry source supports it**:
 
 ```yaml
-use_otlp_decoding:
-  logs: true
-  metrics: true
-  traces: true
+decoding:
+  codec: otlp
 ```
 
-When migrating `use_otlp_decoding: false`, set all three options to `false` instead.
+Omitting `decoding.signal_types` selects all three OTLP signals: logs, metrics, and traces. The existing
+OTLP codec already has this default; accepting `decoding` on the OpenTelemetry source requires new
+support.
+
+For `use_otlp_decoding: false`, the intended migration is to remove the option and omit the entire
+`decoding` block. Omitting the block will continue to use Vector's native conversion for all signals,
+preserving the source's current default.
+
+#### Mixed native and OTLP configurations
+
+A configuration such as `use_otlp_decoding: {traces: true}` preserves OTLP traces while converting logs
+and metrics to Vector's native representation. The existing OTLP codec's `signal_types` array selects
+which signal formats to try parsing, in priority order; it does not provide native conversion for
+signals omitted from that array. Setting `decoding.signal_types: ["traces"]` is therefore not an
+equivalent migration.
+
+We will define and release a supported migration for mixed configurations before deprecating the
+whole option. Until then, keep the existing per-signal configuration.
